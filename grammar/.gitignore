@@ -1,0 +1,4 @@
+#Don't check in generated .java and .tokens files
+*.java
+*.tokens
+
