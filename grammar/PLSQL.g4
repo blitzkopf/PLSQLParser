@@ -10,7 +10,7 @@ show_errors
     ;
 
 create_object
-    : create_package_body
+    : create_package
     | create_package_body
     | create_function
     | create_procedure
@@ -362,8 +362,28 @@ match_parens
     ;
 
 label_name:	ID;
+expression:
+    atom
+    | expression OR expression
+    | expression AND expression
+    | NOT expression
+    | expression (EQ | NOT_EQ | LTH | LEQ | GTH | GEQ ) expression
+    | expression IS NOT? NULL
+    | expression NOT? LIKE expression
+    | expression NOT? BETWEEN expression AND expression
+    | expression NOT? IN LPAREN expression ( COMMA expression )* RPAREN 
+//    | expression 
+    | numeric_expression
+    ;
 
-expression
+numeric_expression
+    : numeric_atom
+    | numeric_expression ( '-' | '+' | '||' ) numeric_expression
+    | numeric_expression ( '*' | '/' | kMOD )  numeric_expression
+    | ( '-' | '+' ) numeric_expression
+    ;
+
+/*expression
     : or_expr
     ;
 
@@ -399,9 +419,7 @@ in_expr
     : add_expr ( NOT? IN LPAREN add_expr ( COMMA add_expr )* RPAREN )?
     ;
 
-numeric_expression
-    : add_expr
-    ;
+
 
 add_expr
     : mul_expr ( ( MINUS | PLUS | DOUBLEVERTBAR ) mul_expr )*
@@ -418,7 +436,7 @@ unary_sign_expr
 exponent_expr
     : atom ( EXPONENT atom )?
     ;
-
+*/
 atom
     : variable_or_function_call ( PERCENT attribute )?
     | SQL PERCENT attribute
@@ -644,8 +662,8 @@ QUOTED_STRING
 	;
 
 ID
-	:	( 'a' .. 'z' )
-		( 'a' .. 'z' | '0' .. '9' | '_' | '$' | '#' )*
+	:	( 'a' .. 'z' | 'A' .. 'Z')
+		( 'a' .. 'z' | 'A' .. 'Z' | '0' .. '9' | '_' | '$' | '#' )*
 	|	DOUBLEQUOTED_STRING
 	;
 SEMI

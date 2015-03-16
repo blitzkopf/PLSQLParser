@@ -1,2 +1,4 @@
 #class files
 *.class
+build/
+.gradle/
