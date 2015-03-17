@@ -566,10 +566,10 @@ kVALUES : {_input.LT(1).getText().equalsIgnoreCase("values")}? ID;
 
 AND	:	'and'	;
 ARRAY : 'array' ;
-AS : 'as' ;
+AS : A S ;
 AUTHID: 'authid';
 BETWEEN : 'between' ;
-BODY	:	'body';
+BODY	:	B O D Y ;
 BULK: 'bulk';
 BULK_ROWCOUNT: 'bulk_rowcount';
 BY	:	'by';
@@ -604,7 +604,7 @@ NOTFOUND:	'notfound';
 NULL : 'null' ;
 OPEN	:	'open';
 OR : 'or' ;
-PACKAGE: 'package';
+PACKAGE: P A C K A G E;
 RAISE	:	'raise';
 ROLLBACK:	'rollback';
 SAVEPOINT	:	'savepoint';
@@ -755,19 +755,19 @@ GEQ
 	:	'>='
 	;
 INTEGER
-    :   N
+    :   NUM
     ;
 REAL_NUMBER
-	:	NUMBER_VALUE	( 'e' ( PLUS | MINUS )? N )?
+	:	NUMBER_VALUE	( 'e' ( PLUS | MINUS )? NUM )?
 	;
 fragment
 NUMBER_VALUE
-	:	N POINT N //{numberDotValid()}?=> N POINT N?
-	|	POINT N
-	|	N
+	:	NUM POINT NUM //{numberDotValid()}?=> NUM POINT NUM?
+	|	POINT NUM
+	|	NUM
 	;
 fragment
-N
+NUM
 	: '0' .. '9' ( '0' .. '9' )*
 	;
 fragment
@@ -782,3 +782,30 @@ SL_COMMENT
 ML_COMMENT
 	:	'/*' ( . )*? '*/' {setChannel(HIDDEN);} // options {greedy=false;} :
  	;
+/* case insensitive lexer matching */
+fragment A:('a'|'A');
+fragment B:('b'|'B');
+fragment C:('c'|'C');
+fragment D:('d'|'D');
+fragment E:('e'|'E');
+fragment F:('f'|'F');
+fragment G:('g'|'G');
+fragment H:('h'|'H');
+fragment I:('i'|'I');
+fragment J:('j'|'J');
+fragment K:('k'|'K');
+fragment L:('l'|'L');
+fragment M:('m'|'M');
+fragment N:('n'|'N');
+fragment O:('o'|'O');
+fragment P:('p'|'P');
+fragment Q:('q'|'Q');
+fragment R:('r'|'R');
+fragment S:('s'|'S');
+fragment T:('t'|'T');
+fragment U:('u'|'U');
+fragment V:('v'|'V');
+fragment W:('w'|'W');
+fragment X:('x'|'X');
+fragment Y:('y'|'Y');
+fragment Z:('z'|'Z');
