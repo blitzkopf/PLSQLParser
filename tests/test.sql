@@ -9,6 +9,7 @@ begin
 	x := 100 + 10;
 	U := 'yngvi';
 	B := H.K(1);
+	Pakki.proc('ok');
 	select c1 into v from dual;
 end x;
 end;

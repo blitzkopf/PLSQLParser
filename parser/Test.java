@@ -3,6 +3,7 @@ import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.RecognitionException;
 import org.antlr.v4.runtime.tree.*;
+import org.antlr.v4.runtime.*;
 //import org.antlr.v4.runtime.debug.*;
 import java.io.IOException;
 
@@ -56,7 +57,18 @@ class Test extends PLSQLBaseListener
 		currentProc="";
 	}*/
 
-	public void enterVariable_or_function_call(PLSQLParser.Variable_or_function_callContext ctx) 
+	public void exitFunction_declaration_or_definition(PLSQLParser.Function_declaration_or_definitionContext ctx) 
+	{ 
+		currentProc="";
+	}
+
+	public void enterFunction_heading(PLSQLParser.Function_headingContext ctx) 
+	{ 	
+		TerminalNode tn = ctx.getToken(PLSQLLexer.ID,0);
+		currentProc= tn.getSymbol().getText();
+		System.out.println(tn);
+	}
+	public void handleCallContext(ParserRuleContext ctx) 
 	{ 
 		String callingPackage="";
 		String callingProc = "";
@@ -66,9 +78,22 @@ class Test extends PLSQLBaseListener
 		if(cctxs.size()==2) {
 			callingPackage=cctxs.get(0).getToken(PLSQLLexer.ID,0).getSymbol().getText();
 			callingProc=cctxs.get(1).getToken(PLSQLLexer.ID,0).getSymbol().getText();
+		} else if (cctxs.size()==1) {
+			callingPackage=currentPackage;
+			callingProc=cctxs.get(0).getToken(PLSQLLexer.ID,0).getSymbol().getText();
+			System.out.println("Bingo");
 		}
 		System.out.println(callingPackage);
 		System.out.println(currentSchema+"."+currentPackage+"."+currentProc+"->"+callingPackage+"."+callingProc );
+	}
+
+	public void enterVariable_or_function_call(PLSQLParser.Variable_or_function_callContext ctx) 
+	{ 
+		handleCallContext(ctx);
+	}
+	public void enterAssign_or_call_statement(PLSQLParser.Assign_or_call_statementContext ctx) 
+	{ 
+		handleCallContext(ctx.getRuleContext(PLSQLParser.LvalueContext.class,0));
 	}
 
 public static void parse(String file) {
@@ -89,20 +114,7 @@ public static void parse(String file) {
     	Test listener = new Test();
     	walker.walk(listener, fileContext);
 
-        ///*start_rule_return AST =*/ parser.data_manipulation_language_statements();
-        //parser.create_package();
-
-        /*System.out.println(builder.getTree().toStringTree());
-
-        System.err.println(file +": " + parser.getNumberOfSyntaxErrors());
-
-        if(parser.getNumberOfSyntaxErrors() != 0)
-        {
-            //System.exit(1);
-        }
-        
-        objInfo(builder.getTree());
-*/
+       
 
     } catch (RecognitionException e) {
         System.err.println(e.toString());
@@ -119,7 +131,7 @@ public static void parse(String file) {
 
 	public static void main(String args[])
 	{
- 		parse("test.sql");
+ 		parse(args[0]);
 
 	}
 
