@@ -96,7 +96,7 @@ class Test extends PLSQLBaseListener
 		handleCallContext(ctx.getRuleContext(PLSQLParser.LvalueContext.class,0));
 	}
 
-public static void parse(String file) {
+	public static void parse(String file) {
     try {
         PLSQLLexer lex = new PLSQLLexer(new ANTLRFileStream(file));
         CommonTokenStream tokens = new CommonTokenStream(lex);

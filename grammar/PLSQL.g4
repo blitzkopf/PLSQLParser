@@ -195,10 +195,17 @@ basic_loop_statement :
 case_statement :
         CASE expression?
         ( WHEN expression THEN ( statement SEMI )+ )+
-        ( ELSE statement SEMI )?
+        ( ELSE statement /*SEMI*/ )?
         END CASE label_name?
     ;
+case_expression :
+        CASE expression?
+        ( WHEN expression THEN  expression   )+
+        ( ELSE expression  )?
+        END 
+    ;
 
+	
 close_statement :
         CLOSE ID ( DOT ID )?
     ;
@@ -372,13 +379,15 @@ expression:
     | expression NOT? LIKE expression
     | expression NOT? BETWEEN expression AND expression
     | expression NOT? IN LPAREN expression ( COMMA expression )* RPAREN 
+	| expression '||' expression
 //    | expression 
     | numeric_expression
+	| case_expression
     ;
 
 numeric_expression
     : numeric_atom
-    | numeric_expression ( '-' | '+' | '||' ) numeric_expression
+    | numeric_expression ( '-' | '+' ) numeric_expression
     | numeric_expression ( '*' | '/' | kMOD )  numeric_expression
     | ( '-' | '+' ) numeric_expression
     ;
@@ -564,13 +573,13 @@ kTYPE : {_input.LT(1).getText().equalsIgnoreCase("type")}? ID;
 kVALUES : {_input.LT(1).getText().equalsIgnoreCase("values")}? ID;
 
 
-AND	:	'and'	;
-ARRAY : 'array' ;
+AND	:	 A N D ;
+ARRAY :  A R R A Y ;
 AS : A S ;
-AUTHID: 'authid';
-BETWEEN : 'between' ;
+AUTHID: A U T H I D ;
+BETWEEN : B E T W E E N ;
 BODY	:	B O D Y ;
-BULK: 'bulk';
+BULK: 'bulk' /*B U L K */;
 BULK_ROWCOUNT: 'bulk_rowcount';
 BY	:	'by';
 CASE: 'case';
@@ -594,7 +603,7 @@ IN : 'in' ;
 INDEX : 'index' ;
 INSERT	:	'insert';
 INTO	:	'into';
-IS : 'is' ;
+IS : I S ;
 LANGUAGE:	'language';
 LIKE : 'like' ;
 LIMIT : 'limit' ;
@@ -782,6 +791,7 @@ SL_COMMENT
 ML_COMMENT
 	:	'/*' ( . )*? '*/' {setChannel(HIDDEN);} // options {greedy=false;} :
  	;
+
 /* case insensitive lexer matching */
 fragment A:('a'|'A');
 fragment B:('b'|'B');
