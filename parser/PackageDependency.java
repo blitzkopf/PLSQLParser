@@ -8,7 +8,8 @@ import org.antlr.v4.runtime.*;
 import java.io.IOException;
 import java.util.List;
 
-class Test extends PLSQLBaseListener 
+
+class PackageDependency extends PLSQLBaseListener 
 {
 	String currentSchema="";
 	String currentPackage="";
@@ -104,6 +105,7 @@ class Test extends PLSQLBaseListener
 		System.out.println("Prefix: " + ctx.prefix);
 		System.out.println("Function_call: " + ctx.element.getText());
 	}
+	
 	public void enterCall_statement(PLSQLParser.Call_statementContext ctx) 
 	{ 
 		//handleCallContext(ctx.getRuleContext(PLSQLParser.LvalueContext.class,0));
@@ -112,9 +114,9 @@ class Test extends PLSQLBaseListener
 		System.out.println("Procedure call: " + ctx.element.getText());
 	}
 
-	public static void parse(String file) {
+	public static void parse(CharStream stream,ReferenceResolver resolver) {
     try {
-        PLSQLLexer lex = new PLSQLLexer(new ANTLRFileStream(file));
+        PLSQLLexer lex = new PLSQLLexer(stream);
         CommonTokenStream tokens = new CommonTokenStream(lex);
        /* System.out.println(tokens);
 
@@ -127,27 +129,26 @@ class Test extends PLSQLBaseListener
 
         PLSQLParser.FileContext fileContext = parser.file();
         ParseTreeWalker walker = new ParseTreeWalker();
-    	Test listener = new Test();
-    	walker.walk(listener, fileContext);
+		
+    	PackageDependency listener = new PackageDependency();
 
-       
+    	walker.walk(listener, fileContext);       
 
     } catch (RecognitionException e) {
         System.err.println(e.toString());
-    } catch (IOException e) {
-        System.err.println(e.toString());
     } catch (java.lang.OutOfMemoryError e) {
-        System.err.println(file + ":");
+        //System.err.println(file + ":");
         System.err.println(e.toString());
     } catch (java.lang.ArrayIndexOutOfBoundsException e) {
-        System.err.println(file + ":");
+        //System.err.println(file + ":");
         System.err.println(e.toString());
     }       
 }
 
 	public static void main(String args[])
+	throws IOException
 	{
- 		parse(args[0]);
+ 		parse(new ANTLRFileStream(args[0]),new ReferenceResolver());
 
 	}
 

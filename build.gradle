@@ -2,16 +2,23 @@ apply plugin: 'antlr'
 apply plugin: 'java'
 repositories {
     mavenCentral()
+	mavenLocal()
 }
-
+/*Y:\oracle\plsql\PLSQLParser>mvn  install:install-file -DgroupId=com.oracle -DartifactId=ojdbc6 -Dversion=11.2.0.3 -Dpackaging=jar -Dfile=ojdbc6.jar -DgeneratePom=true-DartifactId=ojdbc6 -Dversion=11.2.0.3 -Dpackaging=jar  -DgeneratePom=true -Dfile=c:\oracle\product\11.2.0\dbhome_1\jdbc\lib\ojdbc6.jar*/
 dependencies {
     antlr "org.antlr:antlr4:4.5" // use ANTLR version 4.5
+	compile  'com.oracle:ojdbc6:11.2.0.3'
+
 }
 
 generateGrammarSource {
 	source('grammar')
 }
 
-compileJava {
-	source('parser')
+sourceSets {
+    main {
+        java {
+            srcDir 'parser'
+        }
+    }
 }

@@ -122,7 +122,8 @@ exception_handler
 	
 statement :
     label*
-    ( assign_or_call_statement
+    ( assign_statement
+	| call_statement
     | case_statement
     | close_statement
     | continue_statement
@@ -141,6 +142,7 @@ statement :
     | return_statement
     | sql_statement
     | while_loop_statement
+	
     )
     ;
 
@@ -148,16 +150,16 @@ lvalue
     : call ( DOT call )*
     ;
 
-assign_or_call_statement
-    : lvalue ( DOT delete_call | ASSIGN expression )?
+assign_statement
+    : lvalue  ASSIGN expression 
     ;
 
+call_statement
+	:  ( prefix+=call DOT )* element=call   ( LPAREN parameter ( DOT parameter )* RPAREN )?
+	;
+	
 call
-    : COLON? ID ( LPAREN ( parameter ( COMMA parameter )* )? RPAREN )?
-    ;
-
-delete_call
-    : DELETE ( LPAREN parameter? RPAREN )?
+    : COLON? id=ID ( LPAREN ( parameter ( COMMA parameter )* )? RPAREN )?
     ;
 
 basic_loop_statement :
@@ -362,6 +364,7 @@ numeric_expression
     | numeric_expression ( '-' | '+' ) numeric_expression
     | numeric_expression ( '*' | '/' | kMOD )  numeric_expression
     | ( '-' | '+' ) numeric_expression
+	| atom ( EXPONENT atom )?
     ;
 
 /*expression
@@ -429,7 +432,8 @@ atom
     ;
     
 variable_or_function_call
-    : call ( DOT call )* ( DOT delete_call )?
+    : (prefix+=call DOT)* element=call  
+//	| call ( DOT call )* call_args
     ;
 
 attribute
@@ -493,7 +497,7 @@ create_package :
     ;
 
 create_package_body :
-        CREATE ( OR kREPLACE )? PACKAGE BODY ( schema_name=ID DOT )? package_name=ID
+        CREATE ( OR kREPLACE )? PACKAGE BODY  (schema_name=ID DOT)?  package_name=ID
         ( IS | AS ) ( declare_section )?
         ( initialize_section=body | END ( package_name2=ID )? )
         SEMI
@@ -605,14 +609,14 @@ DELETING:	'deleting';
 ISOPEN	:	'isopen';
 EXISTS	:	'exists';
 
-BEGIN	:	'begin'	;
+BEGIN	:	B E G I N	;
 CLOSE	:	'close';
 CONSTANT	:	'constant'	;
 CONTINUE:	'continue';
 CURSOR	:	'cursor'	;
 DECLARE	:	'declare'	;
 DETERMINISTIC	: 'deterministic'	;
-END	:	'end'	;
+END	:	E N D ;
 EXCEPTION	:	'exception'	;
 EXECUTE	:	'execute';
 EXIT	:	'exit';
