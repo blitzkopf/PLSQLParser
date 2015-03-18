@@ -16,17 +16,12 @@ class Test extends PLSQLBaseListener
 	{ 
 		System.out.println(ctx.getStart());
 		System.out.println(ctx.getStop());
-		java.util.List<TerminalNode> tl = ctx.getTokens(PLSQLLexer.ID);
-		if(tl.size() == 2) {
-			currentSchema=tl.get(0).getSymbol().getText();
-			currentPackage=tl.get(1).getSymbol().getText();
-		} else if (tl.size()==1) {
+		if(ctx.schema_name != null) 
+			currentSchema=ctx.schema_name.getText();
+		else
 			currentSchema="UNKN";
-			currentPackage=tl.get(0).getSymbol().getText();
-		}
-
-		//TerminalNode tn = ctx.getToken(PLSQLLexer.ID,0);
-		System.out.println(tl);
+		currentPackage=ctx.package_name.getText();
+		System.out.println("entering package "+currentSchema+"."+currentPackage);
 		
 	}
 	public void exitCreate_package_body(PLSQLParser.Create_package_bodyContext ctx) 
@@ -36,26 +31,27 @@ class Test extends PLSQLBaseListener
 		
 	}
 
-	/*public void enterProcedure_declaration_or_definition(PLSQLParser.Procedure_declaration_or_definitionContext ctx) 
+	public void enterProcedure_declaration_or_definition(PLSQLParser.Procedure_declaration_or_definitionContext ctx) 
 	{ 
 		System.out.println(ctx.getStart());
 		System.out.println(ctx.getStop());
-	}*/
+		currentProc= ctx.procedure_name.getText();
+	}
 	public void exitProcedure_declaration_or_definition(PLSQLParser.Procedure_declaration_or_definitionContext ctx) 
 	{ 
 		currentProc="";
 	}
 
-	public void enterProcedure_heading(PLSQLParser.Procedure_headingContext ctx) 
-	{ 	
-		TerminalNode tn = ctx.getToken(PLSQLLexer.ID,0);
-		currentProc= tn.getSymbol().getText();
-		System.out.println(tn);
-	}
 	/*public void exitProcedure_heading(PLSQLParser.Procedure_headingContext ctx) 
 	{ 
 		currentProc="";
 	}*/
+	public void enterFunction_declaration_or_definition(PLSQLParser.Function_declaration_or_definitionContext ctx) 
+	{ 
+		System.out.println(ctx.getStart());
+		System.out.println(ctx.getStop());
+		currentProc= ctx.function_name.getText();
+	}
 
 	public void exitFunction_declaration_or_definition(PLSQLParser.Function_declaration_or_definitionContext ctx) 
 	{ 

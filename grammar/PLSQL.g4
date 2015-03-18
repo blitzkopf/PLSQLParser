@@ -16,12 +16,8 @@ create_object
     | create_procedure
     ;
 
-procedure_heading :
-        PROCEDURE ID parameter_declarations?
-    ;
-
 function_heading :
-        FUNCTION ID parameter_declarations? RETURN datatype
+        FUNCTION function_name=ID parameter_declarations? RETURN datatype
     ;
 
 parameter_declarations :
@@ -108,35 +104,15 @@ datatype
     ;
 
 function_declaration_or_definition :
-        function_heading
+        FUNCTION function_name=ID parameter_declarations? RETURN datatype
         ( DETERMINISTIC | PIPELINED | PARALLEL_ENABLE | RESULT_CACHE )*
         ( ( IS | AS ) declare_section? body )?
-	;
-
-function_declaration :
-        function_heading
-        ( DETERMINISTIC | PIPELINED | PARALLEL_ENABLE | RESULT_CACHE )*
-    ;
-
-function_definition :
-        function_heading
-        ( DETERMINISTIC | PIPELINED | PARALLEL_ENABLE | RESULT_CACHE )*
-        ( IS | AS ) declare_section? body
 	;
 
 procedure_declaration_or_definition :
-        procedure_heading
+        PROCEDURE procedure_name=ID parameter_declarations?
         ( ( IS | AS ) declare_section? body )?
     ;
-
-procedure_declaration :
-	procedure_heading
-	;
-
-procedure_definition :
-	procedure_heading
-	( IS | AS ) declare_section? body
-	;
 	
 body 	:	
 	BEGIN statement SEMI ( statement SEMI | pragma SEMI )*
