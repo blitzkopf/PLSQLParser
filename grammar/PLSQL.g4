@@ -16,10 +16,6 @@ create_object
     | create_procedure
     ;
 
-function_heading :
-        FUNCTION function_name=ID parameter_declarations? RETURN datatype
-    ;
-
 parameter_declarations :
         (   LPAREN  parameter_declaration ( COMMA  parameter_declaration )* RPAREN )
     ;
