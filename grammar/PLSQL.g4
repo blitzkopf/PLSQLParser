@@ -47,11 +47,11 @@ item_declaration
     ;
 
 variable_declaration :
-        ID datatype (  (  NOT NULL )? (  ASSIGN  | DEFAULT ) expression  )?
+        variable_name=ID datatype (  (  NOT NULL )? (  ASSIGN  | DEFAULT ) expression  )?
     ;
 
 constant_declaration :
-        ID CONSTANT datatype ( NOT NULL )? (   ASSIGN  | DEFAULT  ) expression
+        constant_name=ID CONSTANT datatype ( NOT NULL )? (   ASSIGN  | DEFAULT  ) expression
     ;
 
 exception_declaration :

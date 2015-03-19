@@ -14,6 +14,13 @@ class PackageDependency extends PLSQLBaseListener
 	String currentSchema="";
 	String currentPackage="";
 	String currentProc="";
+	ReferenceResolver resolver;
+
+	public PackageDependency(ReferenceResolver resolver) 
+	{
+		this.resolver=resolver;
+	}
+
 	public void enterCreate_package_body(PLSQLParser.Create_package_bodyContext ctx) 
 	{ 
 		System.out.println(ctx.getStart());
@@ -24,15 +31,26 @@ class PackageDependency extends PLSQLBaseListener
 			currentSchema="UNKN";
 		currentPackage=ctx.package_name.getText();
 		System.out.println("entering package "+currentSchema+"."+currentPackage);
+		resolver.registerElement(currentPackage,"package");
+		resolver.pushContext(currentPackage,"package");
 		
 	}
+
 	public void exitCreate_package_body(PLSQLParser.Create_package_bodyContext ctx) 
 	{ 	
 		currentSchema="";
-		currentPackage="";	
+		currentPackage="";
+		resolver.popContext();
 		
 	}
-	
+
+	public void enterVariable_declaration(PLSQLParser.Variable_declarationContext ctx) 
+	{ 
+		resolver.registerElement(ctx.variable_name.getText(),"variable");
+		System.out.println("variable:"+ctx.variable_name.getText());
+		
+	}	
+
 	public void handleEnterProcDef(String procName)
 	{
 		//we don't want to keep track of dependencies of nested functions, they will be registered as 
@@ -40,6 +58,9 @@ class PackageDependency extends PLSQLBaseListener
 		if(currentProc.equals("")) {
 			currentProc=procName;
 		}
+		resolver.registerElement(currentProc,"procedure");
+		resolver.pushContext(currentProc,"procedure");
+
 	}
 
 	public void handleExitProcDef(String procName){
@@ -48,6 +69,7 @@ class PackageDependency extends PLSQLBaseListener
 		if(currentProc.equals(procName)) {	
 			currentProc="";
 		}
+		resolver.popContext();
 	}
 
 	
@@ -86,14 +108,19 @@ class PackageDependency extends PLSQLBaseListener
 	{ 
 		String calledSchema =  "";
 		String calledPackage = "";
-		String calledProc = element.getText();
+		String calledProc = element.id.getText();
+		PLSQLElement ref;
 		if(prefix.size()==2) {
 			calledSchema=prefix.get(0).id.getText();
 			calledPackage=prefix.get(1).id.getText();
 		} else if (prefix.size()==1) {
 			calledSchema=currentSchema;
 			calledPackage=prefix.get(0).id.getText();;
-		}		
+		}
+		ref=resolver.findElement(element.id.getText());
+		if(ref != null ) 
+			System.out.println(ref.name+" <"+ref.type+">");
+
 		System.out.println(calledPackage);
 		System.out.println(currentSchema+"."+currentPackage+"."+currentProc+"->"+calledSchema+"."+calledPackage+"."+calledProc );
 	}
@@ -130,7 +157,7 @@ class PackageDependency extends PLSQLBaseListener
         PLSQLParser.FileContext fileContext = parser.file();
         ParseTreeWalker walker = new ParseTreeWalker();
 		
-    	PackageDependency listener = new PackageDependency();
+    	PackageDependency listener = new PackageDependency(resolver);
 
     	walker.walk(listener, fileContext);       
 

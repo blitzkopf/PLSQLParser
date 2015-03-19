@@ -1,4 +1,5 @@
 create or replace package body Yngvi.pak as 
+	y varchar2;
 procedure x(c varchar2(100)) is 
 	x number;
 	procedure g(d integer) is
