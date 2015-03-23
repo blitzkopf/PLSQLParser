@@ -6,7 +6,7 @@ file
     ;
     
 show_errors
-    : kSHOW kERRORS SEMI?
+    : SHOW ERRORS SEMI?
     ;
 
 create_object
@@ -21,7 +21,7 @@ parameter_declarations :
     ;
 
 parameter_declaration :
-        ID ( IN | ( ( OUT | IN OUT ) NOCOPY? ) )? datatype
+        id ( IN | ( ( OUT | IN OUT ) NOCOPY? ) )? datatype
         ( ( ASSIGN | DEFAULT ) expression )?
     ;
 
@@ -37,7 +37,7 @@ declare_section :
     ;
 
 cursor_definition :
-        CURSOR ID parameter_declarations? IS select_statement
+        CURSOR id parameter_declarations? IS select_statement
     ;
 
 item_declaration
@@ -47,23 +47,23 @@ item_declaration
     ;
 
 variable_declaration :
-        variable_name=ID datatype (  (  NOT NULL )? (  ASSIGN  | DEFAULT ) expression  )?
+        variable_name=id datatype (  (  NOT NULL )? (  ASSIGN  | DEFAULT ) expression  )?
     ;
 
 constant_declaration :
-        constant_name=ID CONSTANT datatype ( NOT NULL )? (   ASSIGN  | DEFAULT  ) expression
+        constant_name=id CONSTANT datatype ( NOT NULL )? (   ASSIGN  | DEFAULT  ) expression
     ;
 
 exception_declaration :
-        ID EXCEPTION
+        id EXCEPTION
     ;
 
 type_definition :
-        kTYPE ID IS ( record_type_definition | collection_type_definition | ref_cursor_type_definition )
+        kTYPE id IS ( record_type_definition | collection_type_definition | ref_cursor_type_definition )
     ;
 
 subtype_definition :
-        SUBTYPE ID IS datatype ( NOT NULL )?
+        SUBTYPE id IS datatype ( NOT NULL )?
     ;
     
 record_type_definition :
@@ -71,7 +71,7 @@ record_type_definition :
     ;
 
 record_field_declaration :
-	ID datatype ( ( NOT NULL )? ( ASSIGN | DEFAULT ) expression )?
+	id datatype ( ( NOT NULL )? ( ASSIGN | DEFAULT ) expression )?
     ;
 
 collection_type_definition
@@ -96,23 +96,23 @@ ref_cursor_type_definition
 	;
 
 datatype
-    : ( REF )? ID ( DOT ID )? ( LPAREN numeric_literal ( COMMA numeric_literal )* RPAREN | PERCENT ( kTYPE | ROWTYPE ) )?
+    : ( REF )? id ( DOT id )? ( LPAREN numeric_literal ( COMMA numeric_literal )* RPAREN | PERCENT ( kTYPE | ROWTYPE ) )?
     ;
 
 function_declaration_or_definition :
-        FUNCTION function_name=ID parameter_declarations? RETURN datatype
+        FUNCTION function_name=id parameter_declarations? RETURN datatype
         ( DETERMINISTIC | PIPELINED | PARALLEL_ENABLE | RESULT_CACHE )*
         ( ( IS | AS ) declare_section? body )?
 	;
 
 procedure_declaration_or_definition :
-        PROCEDURE procedure_name=ID parameter_declarations?
+        PROCEDURE procedure_name=id parameter_declarations?
         ( ( IS | AS ) declare_section? body )?
     ;
 	
 body 	:	
 	BEGIN statement SEMI ( statement SEMI | pragma SEMI )*
-	( EXCEPTION exception_handler+ )? END ID?
+	( EXCEPTION exception_handler+ )? END id?
 	;
 
 exception_handler
@@ -155,11 +155,11 @@ assign_statement
     ;
 
 call_statement
-	:  ( prefix+=call DOT )* element=call   ( LPAREN parameter ( DOT parameter )* RPAREN )?
+	:  elements+=call ( DOT elements+=call )* ( LPAREN parameter ( DOT parameter )* RPAREN )?
 	;
 	
 call
-    : COLON? id=ID ( LPAREN ( parameter ( COMMA parameter )* )? RPAREN )?
+    : COLON? name=id ( LPAREN ( parameter ( COMMA parameter )* )? RPAREN )?
     ;
 
 basic_loop_statement :
@@ -181,11 +181,11 @@ case_expression :
 
 	
 close_statement :
-        CLOSE ID ( DOT ID )?
+        CLOSE id ( DOT id )?
     ;
 
 continue_statement :
-        CONTINUE ( lbl=ID )? ( WHEN expression )?
+        CONTINUE ( lbl=id )? ( WHEN expression )?
     ;
 
 execute_immediate_statement :
@@ -197,7 +197,7 @@ execute_immediate_statement :
     ;
 
 exit_statement :
-        EXIT ( lbl=ID )? ( WHEN expression )?
+        EXIT ( lbl=id )? ( WHEN expression )?
     ;
 
 fetch_statement :
@@ -225,11 +225,11 @@ dynamic_returning_clause :
     ;
 
 for_loop_statement :
-        FOR ID IN ( ~(LOOP) )+ LOOP ( statement SEMI )+ END LOOP label_name?
+        FOR variable_name=id IN ( ~(LOOP) )+ LOOP ( statement SEMI )+ END LOOP label_name?
     ;
 
 forall_statement :
-        FORALL ID IN bounds_clause sql_statement ( kSAVE kEXCEPTIONS )?
+        FORALL variable_name=id IN bounds_clause ( SAVE EXCEPTIONS )? sql_statement 
     ; 
 
 bounds_clause 
@@ -254,7 +254,7 @@ null_statement :
     ;
 
 open_statement :
-        OPEN ID ( DOT ID )* call_args? ( FOR select_statement )?
+        OPEN id ( DOT id )* call_args? ( FOR select_statement )?
     ;
 
 pragma :
@@ -262,7 +262,7 @@ pragma :
     ;
 
 raise_statement :
-        RAISE ( ID ( DOT ID )* )?
+        RAISE ( id ( DOT id )* )?
     ;
 
 return_statement :
@@ -278,7 +278,7 @@ label :
     ;
 
 qual_id :
-	COLON? ID ( DOT COLON? ID )*
+	COLON? id ( DOT COLON? id )*
     ;
 
 sql_statement
@@ -314,7 +314,7 @@ rollback_statement :
     ;
 
 savepoint_statement :
-        SAVEPOINT ID
+        SAVEPOINT id
     ;
 
 select_statement :
@@ -342,7 +342,7 @@ match_parens
     | RPAREN match_parens LPAREN
     ;
 
-label_name:	ID;
+label_name:	id;
 expression:
     atom
     | expression OR expression
@@ -432,7 +432,8 @@ atom
     ;
     
 variable_or_function_call
-    : (prefix+=call DOT)* element=call  
+    : elements+=call (DOT elements+=call)*
+//    : (prefix+=call DOT)* element=call  
 //	| call ( DOT call )* call_args
     ;
 
@@ -473,7 +474,7 @@ string_literal
     ;
 
 collection_exists
-    : ID DOT EXISTS LPAREN expression RPAREN
+    : id DOT EXISTS LPAREN expression RPAREN
     ;
 
 conditional_predicate
@@ -483,7 +484,7 @@ conditional_predicate
     ;
 
 parameter
-    : ( ID ARROW )? expression
+    : ( id ARROW )? expression
     ;
 
 index
@@ -491,20 +492,20 @@ index
     ;
 
 create_package :
-        CREATE ( OR kREPLACE )? PACKAGE ( schema_name=ID DOT )? package_name=ID
+        CREATE ( OR kREPLACE )? PACKAGE ( schema_name=id DOT )? package_name=id
         ( invoker_rights_clause )?
-        ( IS | AS ) ( declare_section )? END ( ID )? SEMI
+        ( IS | AS ) ( declare_section )? END ( id )? SEMI
     ;
 
 create_package_body :
-        CREATE ( OR kREPLACE )? PACKAGE BODY  (schema_name=ID DOT)?  package_name=ID
+        CREATE ( OR kREPLACE )? PACKAGE BODY  (schema_name=id DOT)?  package_name=id
         ( IS | AS ) ( declare_section )?
-        ( initialize_section=body | END ( package_name2=ID )? )
+        ( initialize_section=body | END ( package_name2=id )? )
         SEMI
     ;
 
 create_procedure :
-        CREATE ( OR kREPLACE )? PROCEDURE ( schema_name=ID DOT )? procedure_name=ID
+        CREATE ( OR kREPLACE )? PROCEDURE ( schema_name=id DOT )? procedure_name=id
         ( LPAREN parameter_declaration ( COMMA parameter_declaration )* RPAREN )?
         invoker_rights_clause?
         ( IS | AS )
@@ -515,7 +516,7 @@ create_procedure :
     ;
 
 create_function :
-        CREATE ( OR kREPLACE )? FUNCTION ( schema_name=ID DOT )? function_name=ID
+        CREATE ( OR kREPLACE )? FUNCTION ( schema_name=id DOT )? function_name=id
         ( LPAREN parameter_declaration ( COMMA parameter_declaration )* RPAREN )?
         RETURN datatype
         invoker_rights_clause?
@@ -534,8 +535,12 @@ call_spec
     : LANGUAGE swallow_to_semi
     ;
 
-kERRORS : {_input.LT(1).getText().length() >= 3 && "errors".startsWith(_input.LT(1).getText().toLowerCase())}? ID;
-kEXCEPTIONS : {_input.LT(1).getText().equalsIgnoreCase("exceptions")}? ID;
+id:
+    ID | ERRORS | EXCEPTIONS | SAVE | SHOW
+    ;
+
+//kERRORS : {_input.LT(1).getText().length() >= 3 && "errors".startsWith(_input.LT(1).getText().toLowerCase())}? ID;
+//kEXCEPTIONS : {_input.LT(1).getText().equalsIgnoreCase("exceptions")}? ID;
 kFOUND : {_input.LT(1).getText().equalsIgnoreCase("found")}? ID;
 kINDICES : {_input.LT(1).getText().equalsIgnoreCase("indices")}? ID;
 kMOD : {_input.LT(1).getText().equalsIgnoreCase("mod")}? ID;
@@ -543,8 +548,8 @@ kNAME : {_input.LT(1).getText().equalsIgnoreCase("name")}? ID;
 kOF : {_input.LT(1).getText().equalsIgnoreCase("of")}? ID;
 kREPLACE : {_input.LT(1).getText().equalsIgnoreCase("replace")}? ID;
 kROWCOUNT : {_input.LT(1).getText().equalsIgnoreCase("rowcount")}? ID;
-kSAVE : {_input.LT(1).getText().equalsIgnoreCase("save")}? ID;
-kSHOW : {_input.LT(1).getText().equalsIgnoreCase("show")}? ID;
+//kSAVE : {_input.LT(1).getText().equalsIgnoreCase("save")}? ID;
+//kSHOW : {_input.LT(1).getText().equalsIgnoreCase("show")}? ID;
 kTYPE : {_input.LT(1).getText().equalsIgnoreCase("type")}? ID;
 kVALUES : {_input.LT(1).getText().equalsIgnoreCase("values")}? ID;
 
@@ -568,6 +573,8 @@ DEFINER: D E F I N E R;
 DELETE  :   D E L E T E;
 ELSE : E L S E ;
 ELSIF   :   E L S I F ;
+ERRORS  :   E R R O R S; 
+EXCEPTIONS: E X C E P T I O N S ;
 EXTERNAL:   E X T E R N A L;
 FALSE   :   F A L S E ;
 FETCH   :   F E T C H ;
@@ -595,6 +602,7 @@ ROLLBACK:   R O L L B A C K ;
 SAVEPOINT   :   S A V E P O I N T ;
 SELECT  :   S E L E C T ;
 SET :   S E T ;
+SHOW    :   S H O W;
 SQL :   S Q L ;
 TABLE   :   T A B L E ;
 TRANSACTION :   T R A N S A C T I O N ;
@@ -636,6 +644,7 @@ RESULT_CACHE    :   R E S U L T '_' C A C H E   ;
 RETURN  :   R E T U R N     ;
 RETURNING   :   R E T U R N I N G  ;
 ROWTYPE :   R O W T Y P E    ;
+SAVE    :   S A V E ;
 SUBTYPE :   S U B T Y P E    ;
 USING:  U S I N G  ;
 VARRAY  :   V A R R A Y     ;

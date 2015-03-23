@@ -38,8 +38,8 @@ class PackageDependency extends PLSQLBaseListener
 			currentSchema=upUnq(ctx.schema_name.getText());
 		currentPackage=upUnq(ctx.package_name.getText());
 		System.out.println("entering package "+currentSchema+"."+currentPackage);
-		resolver.registerElement(currentPackage,"package");
 		resolver.pushContext(currentPackage,"package");
+		//resolver.registerElement(currentPackage,"package");
 		
 	}
 
@@ -56,7 +56,13 @@ class PackageDependency extends PLSQLBaseListener
 		resolver.registerElement(upUnq(ctx.variable_name.getText()),"variable");
 		//System.out.println("variable:"+ctx.variable_name.getText());
 		
-	}	
+	}
+	public void enterFor_loop_statement(PLSQLParser.For_loop_statementContext ctx) 
+	{ 
+		resolver.registerElement(upUnq(ctx.variable_name.getText()),"variable");
+		//System.out.println("variable:"+ctx.variable_name.getText());
+		
+	}
 
 	public void handleEnterProcDef(String procName)
 	{
@@ -65,8 +71,8 @@ class PackageDependency extends PLSQLBaseListener
 		if(currentProc.equals("")) {
 			currentProc=procName;
 		}
-		resolver.registerElement(currentProc,"procedure");
-		resolver.pushContext(currentProc,"procedure");
+		resolver.registerElement(procName,"procedure");
+		resolver.pushContext(procName,"procedure");
 
 	}
 
@@ -111,24 +117,42 @@ class PackageDependency extends PLSQLBaseListener
 		handleExitProcDef(upUnq(ctx.function_name.getText()));
 	}
 
-	public void handleProcFuncCall(List<PLSQLParser.CallContext> prefix,PLSQLParser.CallContext element) 
+	public void handleProcFuncCall(List<PLSQLParser.CallContext>  elements) 
 	{ 
 		String calledSchema =  "";
 		String calledPackage = "";
-		String calledProc = upUnq(element.id.getText());
+		String calledProc = "";
 		PLSQLElement ref;
-		if(prefix.size()==2) {
-			calledSchema=upUnq(prefix.get(0).id.getText());
-			calledPackage=upUnq(prefix.get(1).id.getText());
-		} else if (prefix.size()==1) {
-			calledSchema=currentSchema;
-			calledPackage=upUnq(prefix.get(0).id.getText());
+		
+		ref=resolver.findElement(upUnq(elements.get(0).name.getText()));
+		
+		if(ref != null ) {
+			if(ref.type == "variable" || ref.ctxType == "procedure") {
+				System.out.println("//"+ref.name+" ("+ref.ctxType+"->"+ref.type+ ")");
+				return;
+			} else if(ref.type=="procedure" && ref.ctxType == "package") {
+				calledSchema =currentSchema;
+				calledPackage=currentPackage;
+				calledProc=ref.name;
+			}
+		} else {
+			/* simplistics version of finding the correct item referenced */
+			if(elements.size()==3) {
+				calledSchema =upUnq(elements.get(0).name.getText());
+				calledPackage=upUnq(elements.get(1).name.getText());
+				calledProc   = upUnq(elements.get(2).name.getText());
+			} else if (elements.size()==2) {
+				calledSchema =currentSchema;
+				calledPackage=upUnq(elements.get(0).name.getText());
+				calledProc   = upUnq(elements.get(1).name.getText());
+
+			} else if (elements.size()==1) {
+				calledSchema =currentSchema;
+				calledPackage=currentPackage;
+				calledProc   = upUnq(elements.get(0).name.getText());
+
+			}
 		}
-		ref=resolver.findElement(upUnq(element.id.getText()));
-		/*
-		if(ref != null ) 
-			System.out.println(ref.name+" <"+ref.type+">");
-		*/
 		//System.out.println(calledPackage);
 		System.out.println("\""+currentSchema+"."+currentPackage+"."+currentProc+"\"->\""+calledSchema+"."+calledPackage+"."+calledProc +"\"");
 	}
@@ -136,15 +160,15 @@ class PackageDependency extends PLSQLBaseListener
 	public void enterVariable_or_function_call(PLSQLParser.Variable_or_function_callContext ctx) 
 	{ 
 		//handleCallContext(ctx);
-		handleProcFuncCall(ctx.prefix,ctx.element);
-		//System.out.println("Prefix: " + ctx.prefix);
+		handleProcFuncCall(ctx.elements);
+		//System.out.println("Elements: " + ctx.elements);
 		//System.out.println("Function_call: " + ctx.element.getText());
 	}
 	
 	public void enterCall_statement(PLSQLParser.Call_statementContext ctx) 
 	{ 
 		//handleCallContext(ctx.getRuleContext(PLSQLParser.LvalueContext.class,0));
-		handleProcFuncCall(ctx.prefix,ctx.element);
+		handleProcFuncCall(ctx.elements);
 		//System.out.println("Prefix: " + ctx.prefix);
 		//System.out.println("Procedure call: " + ctx.element.getText());
 	}
