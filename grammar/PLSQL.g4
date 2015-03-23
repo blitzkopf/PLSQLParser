@@ -322,12 +322,10 @@ select_statement :
 		subquery_factoring_clause?  subquery /*for_update_clause?*/
     ;
 subquery :
-	 ( query_block 
-		/*|  subquery ( UNION ALL? | INTERSECT | MINUS ) subquery*/
-		| LPAREN subquery RPAREN 
-	) /*order_by_clause?*/
+	query_block order_by_clause?
+	|  subquery (( UNION ALL? | INTERSECT | MINUS ) subquery )+ order_by_clause?
+	| LPAREN subquery RPAREN order_by_clause?
 	;
-
 query_block :
 	SELECT /*hint?*/ ( DISTINCT | UNIQUE | ALL )? select_list
 	FROM from_element ( COMMA from_element )*
@@ -392,6 +390,12 @@ where_clause:
 	WHERE condition
 	;
 
+order_by_clause:
+	ORDER SIBLINGS? BY order_by_element?  ( COMMA order_by_element )
+	;
+order_by_element:
+	expression ( ASC | DESC )? ( NULLS FIRST |NULLS LAST )? 
+	;
 condition: 
 	expression
 	;
@@ -629,6 +633,7 @@ ALL : A L L ;
 AND :    A N D ;
 ARRAY :  A R R A Y ;
 AS : A S ;
+ASC : A S C ( E N D I N G )?;
 AT : A T ;
 AUTHID: A U T H I D ;
 BETWEEN : B E T W E E N ;
@@ -645,12 +650,14 @@ CURRENT_USER: C U R R E N T '_' U S E R;
 DEFAULT : D E F A U L T ;
 DEFINER: D E F I N E R;
 DELETE  :   D E L E T E;
+DESC: D E S C ( E N D I N G ) ;
 DISTINCT : D I S T I N C T ;
 ELSE : E L S E ;
 ELSIF   :   E L S I F ;
 EXTERNAL:   E X T E R N A L;
 FALSE   :   F A L S E ;
 FETCH   :   F E T C H ;
+FIRST   :   F I R S T ;
 FOR : F O R  ;
 FORALL : F O R A L L  ;
 FROM: F R O M ;
@@ -666,6 +673,7 @@ INTO    :   I N T O ;
 IS : I S ;
 JOIN: J O I N ;
 LANGUAGE:   L A N G U A G E ;
+LAST: L A S T ;
 LEFT: L E F T ;
 LIKE : L I K E  ;
 LIMIT : L I M I T  ;
@@ -674,10 +682,12 @@ NATURAL : N A T U R A L ;
 NOT : N O T  ;
 NOTFOUND:   N O T F O U N D ;
 NULL : N U L L  ;
+NULLS : N U L L S ;
 ONLY  : O N L Y ;
 OPEN    :   O P E N ;
 ON : O N  ;
 OR : O R  ;
+ORDER : O R D E R  ;
 OUTER: O U T E R ;
 PACKAGE: P A C K A G E;
 RAISE   :   R A I S E ;
@@ -686,6 +696,7 @@ ROLLBACK:   R O L L B A C K ;
 SAVEPOINT   :   S A V E P O I N T ;
 SELECT  :   S E L E C T ;
 SET :   S E T ;
+SIBLINGS : S I B L I N G S ;
 SQL :   S Q L ;
 TABLE   :   T A B L E ;
 TRANSACTION :   T R A N S A C T I O N ;
