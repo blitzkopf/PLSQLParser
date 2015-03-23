@@ -318,9 +318,88 @@ savepoint_statement :
     ;
 
 select_statement :
-        SELECT swallow_to_semi
+		//SELECT swallow_to_semi
+		subquery_factoring_clause?  subquery /*for_update_clause?*/
     ;
+subquery :
+	query_block order_by_clause?
+	|  subquery (( UNION ALL? | INTERSECT | MINUS ) subquery )+ order_by_clause?
+	| LPAREN subquery RPAREN order_by_clause?
+	;
+query_block :
+	SELECT /*hint?*/ ( DISTINCT | UNIQUE | ALL )? select_list
+	FROM from_element ( COMMA from_element )*
+	where_clause? /* hirarchial_query_clause? group_by_clause? */
+	/*( HAVING condition )?*/ /*model_clause?*/
+	;
 
+from_element :
+	 table_reference 
+	 | join_clause 
+	 | LPAREN join_clause RPAREN 
+	;
+
+subquery_factoring_clause :
+	WITH query_name=id AS LPAREN subquery RPAREN ( COMMA query_name=id AS LPAREN subquery RPAREN )*
+	;
+
+select_list :
+	ASTERISK
+	| select_element ( COMMA select_element )*
+	;
+	
+select_element:
+	id ( DOT id )? DOT ASTERISK
+	| expression ( AS? id )?
+	;
+
+table_reference:
+	( ONLY LPAREN query_table_expression RPAREN 
+		| query_table_expression /*( pivot_clause | unpivot_clause )?*/
+	)  /*flashback_query_clause? */ (t_alias=id)?
+	;
+
+query_table_expression:
+	/* query_name
+	|*/ ( schema=id DOT)?  table=id ( AT dblink=id  /*|partition_extension_clause */ )? /*sample_clause?*/
+	| LPAREN subquery /*subquery_restriction_clause?*/ RPAREN
+	/*| table_collection_expression*/
+	;
+
+join_clause:
+	table_reference ( inner_cross_join_clause |outer_join_clause)*
+	;
+
+inner_cross_join_clause:
+	INNER? JOIN table_reference ( ON condition | USING LPAREN columns+=id ( COMMA columns+=id)* )
+	| ( CROSS | NATURAL INNER? ) JOIN table_reference
+	;
+	
+outer_join_clause:
+	/* query_partition_clause? */ ( outer_join_type  | NATURAL outer_join_type ) JOIN 
+		table_reference  /* query_partition_clause */ 
+		( ON condition | USING LPAREN columns+=id ( COMMA columns+=id)* )
+	;
+
+outer_join_type:
+	( FULL | LEFT | RIGHT ) OUTER?
+	;
+	
+
+where_clause:
+	WHERE condition
+	;
+
+order_by_clause:
+	ORDER SIBLINGS? BY order_by_element?  ( COMMA order_by_element )
+	;
+order_by_element:
+	expression ( ASC | DESC )? ( NULLS FIRST |NULLS LAST )? 
+	;
+condition: 
+	expression
+	;
+	
 set_transaction_statement :
         SET TRANSACTION swallow_to_semi
     ;
@@ -553,10 +632,12 @@ kROWCOUNT : {_input.LT(1).getText().equalsIgnoreCase("rowcount")}? ID;
 kTYPE : {_input.LT(1).getText().equalsIgnoreCase("type")}? ID;
 kVALUES : {_input.LT(1).getText().equalsIgnoreCase("values")}? ID;
 
-
+ALL : A L L ;
 AND :    A N D ;
 ARRAY :  A R R A Y ;
 AS : A S ;
+ASC : A S C ( E N D I N G )?;
+AT : A T ;
 AUTHID: A U T H I D ;
 BETWEEN : B E T W E E N ;
 BODY    :   B O D Y ;
@@ -565,12 +646,15 @@ BULK_ROWCOUNT: B U L K '_' R O W C O U N T ;
 BY  :   B Y;
 CASE: C A S E;
 CREATE: C R E A T E;
+CROSS: C R O S S;
 COLLECT:    C O L L E C T ;
 COMMIT  :   C O M M I T;
 CURRENT_USER: C U R R E N T '_' U S E R;
 DEFAULT : D E F A U L T ;
 DEFINER: D E F I N E R;
 DELETE  :   D E L E T E;
+DESC: D E S C ( E N D I N G ) ;
+DISTINCT : D I S T I N C T ;
 ELSE : E L S E ;
 ELSIF   :   E L S I F ;
 ERRORS  :   E R R O R S; 
@@ -578,38 +662,59 @@ EXCEPTIONS: E X C E P T I O N S ;
 EXTERNAL:   E X T E R N A L;
 FALSE   :   F A L S E ;
 FETCH   :   F E T C H ;
+FIRST   :   F I R S T ;
 FOR : F O R  ;
 FORALL : F O R A L L  ;
+FROM: F R O M ;
+FULL: F U L L ;
 GOTO    :   G O T O ;
 IF  :   I F ;
 IN : I N  ;
 INDEX : I N D E X  ;
+INNER  :   I N N E R;
 INSERT  :   I N S E R T ;
+INTERSECT: I N T E R S E C T ;
 INTO    :   I N T O ;
 IS : I S ;
+JOIN: J O I N ;
 LANGUAGE:   L A N G U A G E ;
+LAST: L A S T ;
+LEFT: L E F T ;
 LIKE : L I K E  ;
 LIMIT : L I M I T  ;
 LOCK    :   L O C K ;
+NATURAL : N A T U R A L ;
 NOT : N O T  ;
 NOTFOUND:   N O T F O U N D ;
 NULL : N U L L  ;
+NULLS : N U L L S ;
+ONLY  : O N L Y ;
 OPEN    :   O P E N ;
+ON : O N  ;
 OR : O R  ;
+ORDER : O R D E R  ;
+OUTER: O U T E R ;
 PACKAGE: P A C K A G E;
 RAISE   :   R A I S E ;
+RIGHT : R I G H T ;
 ROLLBACK:   R O L L B A C K ;
 SAVEPOINT   :   S A V E P O I N T ;
 SELECT  :   S E L E C T ;
 SET :   S E T ;
 SHOW    :   S H O W;
+SIBLINGS : S I B L I N G S ;
 SQL :   S Q L ;
 TABLE   :   T A B L E ;
 TRANSACTION :   T R A N S A C T I O N ;
 TRUE    :   T R U E ;
 THEN : T H E N  ;
+UNION: U N I O N;
+UNIQUE: U N I Q U E;
 UPDATE  :   U P D A T E ;
+WHERE   :   W H E R E ;
 WHILE   :   W H I L E ;
+WITH	: 	W I T H ;
+
 INSERTING
     :   I N S E R T I N G ;
 UPDATING:   U P D A T I N G ;
