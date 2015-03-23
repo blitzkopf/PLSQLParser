@@ -115,16 +115,16 @@ class PackageDependency extends PLSQLBaseListener
 	{ 
 		String calledSchema =  "";
 		String calledPackage = "";
-		String calledProc = upUnq(element.id.getText());
+		String calledProc = upUnq(element.element.getText());
 		PLSQLElement ref;
 		if(prefix.size()==2) {
-			calledSchema=upUnq(prefix.get(0).id.getText());
-			calledPackage=upUnq(prefix.get(1).id.getText());
+			calledSchema=upUnq(prefix.get(0).element.getText());
+			calledPackage=upUnq(prefix.get(1).element.getText());
 		} else if (prefix.size()==1) {
 			calledSchema=currentSchema;
-			calledPackage=upUnq(prefix.get(0).id.getText());
+			calledPackage=upUnq(prefix.get(0).element.getText());
 		}
-		ref=resolver.findElement(upUnq(element.id.getText()));
+		ref=resolver.findElement(upUnq(element.element.getText()));
 		/*
 		if(ref != null ) 
 			System.out.println(ref.name+" <"+ref.type+">");
@@ -148,6 +148,19 @@ class PackageDependency extends PLSQLBaseListener
 		//System.out.println("Prefix: " + ctx.prefix);
 		//System.out.println("Procedure call: " + ctx.element.getText());
 	}
+	
+	public void enterQuery_table_expression(PLSQLParser.Query_table_expressionContext ctx) 
+	{ 
+		System.out.println("//Query_table_expression");
+		String referencedSchema =  "";
+		String referencedTable = "";
+		referencedSchema=upUnq(ctx.schema.getText());
+		referencedTable=upUnq(ctx.table.getText());
+		
+		System.out.println("\""+currentSchema+"."+currentPackage+"."+currentProc+"\"->\""+referencedSchema+"."+referencedTable +"\"");
+		
+	}
+
 
 	public static void parse(CharStream stream,ReferenceResolver resolver, String schema) 
 	{
