@@ -328,6 +328,7 @@ subquery :
 	;
 query_block :
 	SELECT /*hint?*/ ( DISTINCT | UNIQUE | ALL )? select_list
+    (INTO lvalue (COMMA lvalue)* )? /* Probably should create special select into statement form PL/SQL */
 	FROM from_element ( COMMA from_element )*
 	where_clause? /* hirarchial_query_clause? group_by_clause? */
 	/*( HAVING condition )?*/ /*model_clause?*/
@@ -361,8 +362,8 @@ table_reference:
 
 query_table_expression:
 	/* query_name
-	|*/ ( schema=id DOT)?  table=id ( AT dblink=id  /*|partition_extension_clause */ )? /*sample_clause?*/
-	| LPAREN subquery /*subquery_restriction_clause?*/ RPAREN
+	|*/ ( schema=id DOT)?  table=id ( AT dblink=id  /*|partition_extension_clause */ )? /*sample_clause?*/ # query_table_def
+	| LPAREN subquery /*subquery_restriction_clause?*/ RPAREN # query_subquery
 	/*| table_collection_expression*/
 	;
 
@@ -391,15 +392,72 @@ where_clause:
 	;
 
 order_by_clause:
-	ORDER SIBLINGS? BY order_by_element?  ( COMMA order_by_element )
+	ORDER SIBLINGS? BY order_by_element?  ( COMMA order_by_element )*
 	;
+
 order_by_element:
 	expression ( ASC | DESC )? ( NULLS FIRST |NULLS LAST )? 
 	;
+
 condition: 
-	expression
-	;
-	
+	  comparison_condition 
+/*    | floating_point_condition
+    | logical_condition
+    | model_condition
+    | multiset_condition
+    | pattern_matching_condition
+    | range_condition
+    | null_condition
+    | XML_condition
+    | compound_condition
+    | exists_condition
+ */   | in_condition
+ /*   | is_of_type_condition
+ */   ;
+comparison_condition:
+    simple_comparison_condition
+   // | group_comparison_condition
+    ;
+
+simple_comparison_condition:
+    expr ( EQ | NOT_EQ | LTH | GTH | LEQ | GEQ ) expr
+    | LPAREN expr ( COMMA expr)* RPAREN ( EQ | NOT_EQ ) LPAREN subquery RPAREN 
+    ;
+
+in_condition:
+    expr ( NOT )? IN  LPAREN ( expression_list | subquery )  RPAREN
+    | LPAREN expr ( COMMA expr)* RPAREN ( NOT )? IN LPAREN ( expression_list ( COMMA expression_list )* | subquery ) RPAREN 
+    ;
+
+expression_list:
+    expr (COMMA expr)*
+    | LPAREN expr (COMMA expr)* RPAREN
+    ;
+
+expr:
+     simple_expression
+    /*| compound_expression
+    | case_expression
+    | cursor_expression
+    | datetime_expression
+    | function_expression
+    | interval_expression
+    | object_access_expression
+    | scalar_subquery_expression
+    | model_expression
+    | type_constructor_expression
+    | variable_expression*/
+    ;
+
+simple_expression:
+    ((schema=id DOT )? table=id DOT)? (column=id | ROWID )
+    | ROWNUM 
+    | string_literal
+    | numeric_literal
+    | sequence=id DOT ( CURRVAL | NEXTVAL)
+    | NULL
+    ;
+
 set_transaction_statement :
         SET TRANSACTION swallow_to_semi
     ;
@@ -650,6 +708,7 @@ CROSS: C R O S S;
 COLLECT:    C O L L E C T ;
 COMMIT  :   C O M M I T;
 CURRENT_USER: C U R R E N T '_' U S E R;
+CURRVAL :   C U R R V A L ;
 DEFAULT : D E F A U L T ;
 DEFINER: D E F I N E R;
 DELETE  :   D E L E T E;
@@ -684,6 +743,7 @@ LIKE : L I K E  ;
 LIMIT : L I M I T  ;
 LOCK    :   L O C K ;
 NATURAL : N A T U R A L ;
+NEXTVAL :   N E X T V A L ;
 NOT : N O T  ;
 NOTFOUND:   N O T F O U N D ;
 NULL : N U L L  ;
@@ -698,6 +758,8 @@ PACKAGE: P A C K A G E;
 RAISE   :   R A I S E ;
 RIGHT : R I G H T ;
 ROLLBACK:   R O L L B A C K ;
+ROWID: R O W I D ;
+ROWNUM: R O W N U M ;
 SAVEPOINT   :   S A V E P O I N T ;
 SELECT  :   S E L E C T ;
 SET :   S E T ;

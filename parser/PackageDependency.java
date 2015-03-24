@@ -173,12 +173,16 @@ class PackageDependency extends PLSQLBaseListener
 		//System.out.println("Procedure call: " + ctx.element.getText());
 	}
 	
-	public void enterQuery_table_expression(PLSQLParser.Query_table_expressionContext ctx) 
+	//public void enterQuery_table_expression(PLSQLParser.Query_table_expressionContext ctx) 
+	public void enterQuery_table_def(PLSQLParser.Query_table_defContext ctx) 
 	{ 
 		System.out.println("//Query_table_expression");
 		String referencedSchema =  "";
 		String referencedTable = "";
-		referencedSchema=upUnq(ctx.schema.getText());
+		if(ctx.schema != null )
+			referencedSchema=upUnq(ctx.schema.getText());
+		else
+			referencedSchema=currentSchema;
 		referencedTable=upUnq(ctx.table.getText());
 		
 		System.out.println("\""+currentSchema+"."+currentPackage+"."+currentProc+"\"->\""+referencedSchema+"."+referencedTable +"\"");
