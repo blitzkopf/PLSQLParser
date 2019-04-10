@@ -1,24 +1,21 @@
+/* nota gradle 2.3 N�rri er me� annan struct�r */
 apply plugin: 'antlr'
 apply plugin: 'java'
+
 repositories {
     mavenCentral()
 	mavenLocal()
 }
 /*Y:\oracle\plsql\PLSQLParser>mvn  install:install-file -DgroupId=com.oracle -DartifactId=ojdbc6 -Dversion=11.2.0.3 -Dpackaging=jar -Dfile=ojdbc6.jar -DgeneratePom=true-DartifactId=ojdbc6 -Dversion=11.2.0.3 -Dpackaging=jar  -DgeneratePom=true -Dfile=c:\oracle\product\11.2.0\dbhome_1\jdbc\lib\ojdbc6.jar*/
 dependencies {
-    antlr "org.antlr:antlr4:4.5" // use ANTLR version 4.5
-	compile  'com.oracle:ojdbc6:11.2.0.3'
+	compile group: 'commons-cli', name: 'commons-cli', version: '1.4'
+    antlr "org.antlr:antlr4:4.7" // use ANTLR version 4.7
+	compile  files('C:\\oracle\\product\\11.2.0\\client_64\\jdbc\\lib\\ojdbc6.jar')
 
 }
 
-generateGrammarSource {
-	source('grammar')
-}
-
-sourceSets {
-    main {
-        java {
-            srcDir 'parser'
-        }
-    }
+compileJava {
+  sourceCompatibility = 1.6
+  targetCompatibility = 1.6
+  options.bootstrapClasspath = files("C:\\Program Files\\Java\\jdk1.6.0_45/jre/lib/rt.jar")
 }

@@ -1,0 +1,1 @@
+interval '0 0:0:0' day to second
