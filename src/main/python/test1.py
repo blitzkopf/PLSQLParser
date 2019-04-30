@@ -3,7 +3,7 @@ import sys
 from antlr4 import *
 from PLSQLLexer import PLSQLLexer
 from PLSQLParser import PLSQLParser
-from PLSQLListener import PLSQLListener
+from PLSQLParserListener import PLSQLParserListener
 import pprint
 import collections
 pp=pprint.PrettyPrinter(indent=2,depth=10)
@@ -13,7 +13,7 @@ def tabtree():
 
 links=tabtree()
 
-class FromFinder(PLSQLListener):
+class FromFinder(PLSQLParserListener):
     def __init__(self):
         super().__init__()
         self.withs=[]
