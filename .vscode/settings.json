@@ -1,0 +1,11 @@
+{
+    "python.linting.pylintEnabled": true,
+    "files.exclude": {
+        "**/.classpath": true,
+        "**/.project": true,
+        "**/.settings": true,
+        "**/.factorypath": true
+    },
+    "java.configuration.updateBuildConfiguration": "interactive",
+    "python.pythonPath": "C:\\Python36\\python.exe"
+}

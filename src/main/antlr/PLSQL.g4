@@ -1,7 +1,7 @@
 grammar PLSQL;
 
 
-file
+script
     : ( create_object ( DIVIDE show_errors )? DIVIDE? )+ EOF
     ;
     
@@ -22,7 +22,7 @@ parameter_declarations :
     ;
 
 parameter_declaration : 
-        param=id ( IN | ( ( OUT | IN OUT ) NOCOPY? ) )? datatype
+        param=ident ( IN | ( ( OUT | IN OUT ) NOCOPY? ) )? datatype
         ( ( ASSIGN | DEFAULT ) expression )?
     ;
 
@@ -38,7 +38,7 @@ declare_section :
     ;
 
 cursor_definition :
-        CURSOR cursor_name=id parameter_declarations? IS select_statement
+        CURSOR cursor_name=ident parameter_declarations? IS select_statement
     ;
 
 item_declaration
@@ -48,23 +48,23 @@ item_declaration
     ;
 
 variable_declaration :
-        variable_name=id datatype (  (  NOT NULL )? ( ASSIGN  | DEFAULT )? expression  )?
+        variable_name=ident datatype (  (  NOT NULL )? ( ASSIGN  | DEFAULT )? expression  )?
     ;
 
 constant_declaration :
-        constant_name=id CONSTANT datatype ( NOT NULL )? ( ASSIGN  | DEFAULT  ) expression
+        constant_name=ident CONSTANT datatype ( NOT NULL )? ( ASSIGN  | DEFAULT  ) expression
     ;
 
 exception_declaration :
-        id EXCEPTION
+        ident EXCEPTION
     ;
 
 type_definition :
-        TYPE id IS ( record_type_definition | collection_type_definition | ref_cursor_type_definition )
+        TYPE ident IS ( record_type_definition | collection_type_definition | ref_cursor_type_definition )
     ;
 
 subtype_definition :
-        SUBTYPE id IS datatype ( NOT NULL )?
+        SUBTYPE ident IS datatype ( NOT NULL )?
     ;
     
 record_type_definition :
@@ -72,7 +72,7 @@ record_type_definition :
     ;
 
 record_field_declaration :
-	id datatype ( ( NOT NULL )? ( ASSIGN | DEFAULT ) expression )?
+	ident datatype ( ( NOT NULL )? ( ASSIGN | DEFAULT ) expression )?
     ;
 
 collection_type_definition
@@ -97,24 +97,24 @@ ref_cursor_type_definition
 	;
 
 datatype
-    :  ( REF )? elements+=id ( DOT elements+=id )* dblink?( LPAREN numeric_literal ( COMMA numeric_literal )* ( BYTE | CHAR )? RPAREN | PERCENT type=( TYPE | ROWTYPE ) | RAW )?
+    :  ( REF )? elements+=ident ( DOT elements+=ident )* dblink?( LPAREN numeric_literal ( COMMA numeric_literal )* ( BYTE | CHAR )? RPAREN | PERCENT objtype=( TYPE | ROWTYPE ) | RAW )?
 	| ROWID
     ;
 
 function_declaration_or_definition :
-        FUNCTION function_name=id parameter_declarations? RETURN datatype
+        FUNCTION function_name=ident parameter_declarations? RETURN datatype
         ( DETERMINISTIC | PIPELINED | PARALLEL_ENABLE | RESULT_CACHE )*
         ( ( IS | AS ) ( declare_section? body  | call_spec) )?
 	;
 
 procedure_declaration_or_definition :
-        PROCEDURE procedure_name=id parameter_declarations?
+        PROCEDURE procedure_name=ident parameter_declarations?
         ( ( IS | AS ) ( declare_section? body | call_spec ) )?
     ;
 	
 body 	:	
 	BEGIN statement SEMI ( statement SEMI | pragma SEMI )*
-	( EXCEPTION exception_handler+ )? END id?
+	( EXCEPTION exception_handler+ )? END ident?
 	;
 
 exception_handler
@@ -162,7 +162,7 @@ call_statement
 	;
 	
 call
-    : COLON? name=id ( LPAREN ( parameter ( COMMA parameter )* )? RPAREN )*
+    : COLON? name=ident ( LPAREN ( parameter ( COMMA parameter )* )? RPAREN )*
     ;
 
 basic_loop_statement :
@@ -187,11 +187,11 @@ case_expression :
     ;
 	
 close_statement :
-        CLOSE id ( DOT id )?
+        CLOSE ident ( DOT ident )?
     ;
 
 continue_statement :
-        CONTINUE ( lbl=id )? ( WHEN expression )?
+        CONTINUE ( lbl=ident )? ( WHEN expression )?
     ;
 
 execute_immediate_statement :
@@ -203,7 +203,7 @@ execute_immediate_statement :
     ;
 
 exit_statement :
-        EXIT ( lbl=id )? ( WHEN expression )?
+        EXIT ( lbl=ident )? ( WHEN expression )?
     ;
 
 fetch_statement :
@@ -231,14 +231,14 @@ dynamic_returning_clause :
     ;
 
 for_loop_statement :
-		FOR variable_name=id IN ( LPAREN select_statement RPAREN | call_statement )  LOOP 
+		FOR variable_name=ident IN ( LPAREN select_statement RPAREN | call_statement )  LOOP 
 			( statement SEMI )+ END LOOP label_name?
-	|	FOR variable_name=id IN REVERSE? expression DOUBLEDOT expression LOOP
+	|	FOR variable_name=ident IN REVERSE? expression DOUBLEDOT expression LOOP
 			( statement SEMI )+ END LOOP label_name?
     ;
 
 forall_statement :
-        FORALL variable_name=id IN bounds_clause ( SAVE EXCEPTIONS )? sql_statement 
+        FORALL variable_name=ident IN bounds_clause ( SAVE EXCEPTIONS )? sql_statement 
     ; 
 
 bounds_clause 
@@ -263,7 +263,7 @@ null_statement :
     ;
 
 open_statement :
-        OPEN id ( DOT id )* call_args? ( FOR ( select_statement | expression ) using_clause? )?
+        OPEN ident ( DOT ident )* call_args? ( FOR ( select_statement | expression ) using_clause? )?
     ;
 /*using_clause :
 	USING ( IN | OUT | IN OUT)? parameter ( COMMA? parameter )*
@@ -274,7 +274,7 @@ pragma :
     ;
 
 raise_statement :
-        RAISE ( id ( DOT id )* )?
+        RAISE ( ident ( DOT ident )* )?
     ;
 
 return_statement :
@@ -286,13 +286,13 @@ plsql_block :
     ;
 
 label :
-        LLABEL label_id=id RLABEL
+        LLABEL label_id=ident RLABEL
     ;
 pipe_row_statement:
 	PIPE ROW LPAREN expression RPAREN
 	;
 qual_id :
-	COLON? id ( DOT COLON? id )*
+	COLON? ident ( DOT COLON? ident )*
     ;
 
 sql_statement
@@ -313,8 +313,8 @@ commit_statement :
     ;
 
 delete_statement :
-        DELETE FROM? ( dml_table_expression_clause  | ONLY LPAREN dml_table_expression_clause RPAREN ) t_alias=id?
-		( where_clause | WHERE CURRENT OF id )? returning_clause? error_logging_clause?
+        DELETE FROM? ( dml_table_expression_clause  | ONLY LPAREN dml_table_expression_clause RPAREN ) t_alias=ident?
+		( where_clause | WHERE CURRENT OF ident )? returning_clause? error_logging_clause?
     ;
 
 insert_statement :
@@ -323,18 +323,18 @@ insert_statement :
     ;
 
 single_table_insert:
-	insert_into_clause ( values_clause ( returning_clause )? | subquery ) /*error_logging_clause? */
+	insert_into_clause ( values_clause ( returning_clause )? | select_statement ) /*error_logging_clause? */
 	;
 
 insert_into_clause:
-	INTO dml_table_expression_clause (t_alias=id)? ( LPAREN (id DOT )? columns+=id ( COMMA (id DOT )?columns+=id )* RPAREN )?
+	INTO dml_table_expression_clause (t_alias=ident)? ( LPAREN (ident DOT )? columns+=ident ( COMMA (ident DOT )?columns+=ident )* RPAREN )?
 	;
 dblink:
-	AT_SIGN name=id ( DOT domain+=id )*
+	AT_SIGN name=ident ( DOT domain+=ident )*
 	;
 
 dml_table_expression_clause:
-	( schema=id DOT )? table=id ( dblink?  /*|partition_extension_clause */ )? # dml_table_def
+	( schema=ident DOT )? table=ident ( dblink?  /*|partition_extension_clause */ )? # dml_table_def
 	| LPAREN subquery subquery_restriction_clause? RPAREN # dml_subquery 
 	| table_collection_expression  # dml_collection
 	;
@@ -358,7 +358,7 @@ rollback_statement :
     ;
 
 savepoint_statement :
-        SAVEPOINT id
+        SAVEPOINT ident
     ;
 
 select_statement :
@@ -375,7 +375,7 @@ for_update_clause:
 	FOR UPDATE ( OF  for_update_column  ( COMMA for_update_column )* )?  ( NOWAIT | WAIT expr | SKIPl LOCKED )?
 	;
 for_update_column:
-	( (schema=id DOT )? table=id  DOT )? column=id
+	( (schema=ident DOT )? table=ident  DOT )? column=ident
 	;
 	
 query_block :
@@ -393,7 +393,7 @@ from_element :
 	;
 
 subquery_factoring_clause :
-	WITH query_name=id AS LPAREN subquery RPAREN ( COMMA query_name=id AS LPAREN subquery RPAREN )*
+	WITH query_name=ident AS LPAREN subquery RPAREN ( COMMA query_name=ident AS LPAREN subquery RPAREN )*
 	;
 
 select_list :
@@ -402,25 +402,25 @@ select_list :
 	;
 	
 select_element:
-	id ( DOT id )? DOT ASTERISK
-	| expr ( AS? id )?
+	ident ( DOT ident )? DOT ASTERISK
+	| expr ( AS? ident )?
 	;
 
 table_reference:
 	( ONLY LPAREN query_table_expression RPAREN 
 		| query_table_expression ( pivot_clause  | unpivot_clause  )?
-	)  /*flashback_query_clause? */ (t_alias=id)?
+	)  /*flashback_query_clause? */ (t_alias=ident)?
 	;
 
 query_table_expression:
 	/* query_name
-	|*/ ( schema=id DOT)?  table=id ( dblink?   /*|partition_extension_clause */ )? /*sample_clause?*/ # query_table_def
+	|*/ ( schema=ident DOT)?  table=ident ( dblink?   /*|partition_extension_clause */ )? /*sample_clause?*/ # query_table_def
 	| THE? LPAREN subquery_factoring_clause? subquery subquery_restriction_clause? RPAREN # query_subquery
 	| table_collection_expression  # query_table_cast
 	| LPAREN from_element RPAREN # query_table_paren
 	;
 subquery_restriction_clause:
-	WITH ( READ ONLY | CHECK OPTION ) (CONSTRAINT id)?
+	WITH ( READ ONLY | CHECK OPTION ) (CONSTRAINT ident)?
 	;
 	
 table_collection_expression:
@@ -433,11 +433,11 @@ pivot_clause:
 	;
 	
 pivot_element:
-	aggregate_func=id LPAREN expr RPAREN (AS? alias=id)?
+	aggregate_func=ident LPAREN expr RPAREN (AS? alias=ident)?
 	;
 	
 pivot_for_clause:
-	FOR ( colmns += id | LPAREN columns += id ( COMMA columns += id )* RPAREN )
+	FOR ( colmns += ident | LPAREN columns += ident ( COMMA columns += ident )* RPAREN )
 	;
 	
 pivot_in_clause:
@@ -450,14 +450,14 @@ pivot_in_list:
 pivot_in_element:
 	 ( expr
 	  | LPAREN expr ( COMMA  expr )*  RPAREN 
-	 ) ( AS? alias=id)
+	 ) ( AS? alias=ident)
 	 ;
 
 unpivot_clause:
 	UNPIVOT ( ( INCLUDE | EXCLUDE ) NULLS )? 
 	LPAREN (
-		culumns+=id
-		| LPAREN columns+=id ( COMMA columns+=id )* RPAREN
+		culumns+=ident
+		| LPAREN columns+=ident ( COMMA columns+=ident )* RPAREN
 	) pivot_for_clause unpivot_in_clause  RPAREN
 	;
 unpivot_in_clause:
@@ -466,7 +466,7 @@ unpivot_in_clause:
 	RPAREN
 	;
 unpivot_in_element:
-	( columns+=id | LPAREN  columns+=id ( COMMA columns+=id )* RPAREN )
+	( columns+=ident | LPAREN  columns+=ident ( COMMA columns+=ident )* RPAREN )
 	( AS ( literal | LPAREN literal ( COMMA literal)* RPAREN) )?
 ;
 literal
@@ -482,14 +482,14 @@ join_clause:
 	;
 
 inner_cross_join_clause:
-	INNER? JOIN table_reference ( ON condition | USING LPAREN columns+=id ( COMMA columns+=id)* RPAREN ) 
+	INNER? JOIN table_reference ( ON condition | USING LPAREN columns+=ident ( COMMA columns+=ident)* RPAREN ) 
 	| ( CROSS | NATURAL INNER? ) JOIN table_reference
 	;
 	
 outer_join_clause:
 	/* query_partition_clause? */ ( outer_join_type  | NATURAL outer_join_type ) JOIN 
 		table_reference  /* query_partition_clause */ 
-		( ON condition | USING LPAREN columns+=id ( COMMA columns+=id)* )
+		( ON condition | USING LPAREN columns+=ident ( COMMA columns+=ident)* )
 	;
 
 outer_join_type:
@@ -533,8 +533,8 @@ order_by_element:
 	;
 
 merge_statement:
-	MERGE INTO dml_table_expression_clause  t_alias=id? //--( schema=id DOT)?  table=id  t_alias=id? */
-	USING  dml_table_expression_clause  u_alias=id?     //--(  ( u_schema=id DOT)?  u_table=id  | subquery ) u_alias=id? 
+	MERGE INTO dml_table_expression_clause  t_alias=ident? //--( schema=ident DOT)?  table=ident  t_alias=ident? */
+	USING  dml_table_expression_clause  u_alias=ident?     //--(  ( u_schema=ident DOT)?  u_table=ident  | subquery ) u_alias=ident? 
 	ON LPAREN condition RPAREN
 	merge_update_clause? merge_insert_clause? error_logging_clause?
 	;
@@ -545,17 +545,17 @@ merge_update_clause:
 	;
 
 merge_update_column:
-	( prefix=id DOT)? column=id EQ ( expr | DEFAULT ) 
+	( prefix=ident DOT)? column=ident EQ ( expr | DEFAULT ) 
 	;
 
 
 merge_insert_clause:
-	WHEN NOT MATCHED THEN INSERT ( LPAREN (id DOT )? columns+=id ( COMMA (id DOT )?columns+=id )* RPAREN )?
+	WHEN NOT MATCHED THEN INSERT ( LPAREN (ident DOT )? columns+=ident ( COMMA (ident DOT )?columns+=ident )* RPAREN )?
 	values_clause where_clause?
 ;
 
 error_logging_clause:
-	LOG ERRORS ( INTO (schema=id)? table=id )? ( LPAREN simple_expression )
+	LOG ERRORS ( INTO (schema=ident)? table=ident )? ( LPAREN simple_expression )
 	( REJECT LIMIT ( INTEGER | UNLIMITED) )?
 ;
 
@@ -570,7 +570,6 @@ condition:
     | multiset_condition */
     | pattern_matching_condition 
     | range_condition 
-*/
     | null_condition
 /*    | XML_condition
     | compound_condition*/
@@ -653,14 +652,14 @@ expr:
     ;
 
 simple_expression:
-    ((schema=id DOT )? table=id DOT)? (column=id | ROWID ) ( OUTER_PLUS )?
+    ((schema=ident DOT )? table=ident DOT)? (column=ident | ROWID ) ( OUTER_PLUS )?
     | ROWNUM 
     | string_literal
 	| date_literal
     | numeric_literal
 	| interval_literal
 	| boolean_literal // booleans is not really part of Oracle SQL, but need this here until I have a stricter separation between SQL and PL/SQL
-    | elements+=id ( DOT elements+=id)* DOT ( CURRVAL | NEXTVAL)
+    | elements+=ident ( DOT elements+=ident)* DOT ( CURRVAL | NEXTVAL)
     | NULL
     ;
 
@@ -676,18 +675,18 @@ sql_case_expression :
 	
     ;
 function_expression:
-	//((schema=id DOT )? table=id DOT)? function=id LPAREN expr ( COMMA expr)* RPAREN
-	elements+=id ( DOT elements+=id)* LPAREN sql_param ( COMMA sql_param)* RPAREN
-	| CAST LPAREN ( expr | MULTISET LPAREN subquery RPAREN ) AS id ( DOT id )* ( LPAREN INTEGER ( COMMA INTEGER)? ( BYTE | CHAR)? RPAREN )?  RPAREN
+	//((schema=ident DOT )? table=ident DOT)? function=ident LPAREN expr ( COMMA expr)* RPAREN
+	elements+=ident ( DOT elements+=ident)* LPAREN sql_param ( COMMA sql_param)* RPAREN
+	| CAST LPAREN ( expr | MULTISET LPAREN subquery RPAREN ) AS ident ( DOT ident )* ( LPAREN INTEGER ( COMMA INTEGER)? ( BYTE | CHAR)? RPAREN )?  RPAREN
 	| extract_function_datetime
 	| trim_function
-	| object_reference_function ( DOT ( function_expression | id ) )* // Not in oracle docs
+	| object_reference_function ( DOT ( function_expression | ident ) )* // Not in oracle docs
 	| xmlelement_function
 	| first_last_function
 	;
 
 sql_param 
-    : ( id ARROW )? expr
+    : ( ident ARROW )? expr
     ;
 
 object_reference_function:
@@ -704,18 +703,18 @@ trim_function:
 	;
 
 xmlelement_function:
-	XMLELEMENT LPAREN  NAME? id ( COMMA xml_attributes_clause )? ( COMMA expr /* value_expr in oracle docs */  ( AS id )?)* RPAREN 
+	XMLELEMENT LPAREN  NAME? ident ( COMMA xml_attributes_clause )? ( COMMA expr /* value_expr in oracle docs */  ( AS ident )?)* RPAREN 
 	;
 
 xml_attributes_clause:
-	XMLATTRIBUTES LPAREN expr /* value_expr in oracle docs */ ( AS id )? ( COMMA expr /* value_expr in oracle docs */ ( AS  id )? )*
+	XMLATTRIBUTES LPAREN expr /* value_expr in oracle docs */ ( AS ident )? ( COMMA expr /* value_expr in oracle docs */ ( AS  ident )? )*
 	;
 xmlagg_function:
 	XMLAGG LPAREN expr order_by_clause? RPAREN 
 	;
 
 first_last_function:
-	aggr_function+=id LPAREN sql_param  RPAREN KEEP 
+	aggr_function+=ident LPAREN sql_param  RPAREN KEEP 
 	LPAREN DENSE_RANK ( FIRST | LAST ) ORDER BY  order_by_element ( COMMA order_by_element)* RPAREN
 	(OVER ( query_partition_clause?))?
 	;
@@ -730,9 +729,9 @@ model_expression:
 	;
 
 analytic_function:
-	( id  LPAREN ( expr ( COMMA expr )*  )? RPAREN
+	( ident  LPAREN ( expr ( COMMA expr )*  )? RPAREN
 		| aggregate_function 
-	)  OVER LPAREN analytic_clause RPAREN
+	)  ( IGNORE NULLS )? OVER LPAREN analytic_clause RPAREN
 	| listagg_function
 	;
 
@@ -757,7 +756,7 @@ listagg_function:
 	;
 	
 aggregate_function:
-	id LPAREN ( ASTERISK | ( DISTINCT | UNIQUE | ALL )?  expr ) RPAREN 
+	ident LPAREN ( ASTERISK | ( DISTINCT | UNIQUE | ALL )?  expr ) RPAREN 
 	;
 	
 value_expr:
@@ -769,22 +768,22 @@ set_transaction_statement :
     ;
 
 update_statement :
-        UPDATE  ( dml_table_expression_clause  | ONLY LPAREN dml_table_expression_clause RPAREN ) t_alias=id?
-		update_set_clause ( where_clause | WHERE CURRENT OF id )? returning_clause? error_logging_clause?
+        UPDATE  ( dml_table_expression_clause  | ONLY LPAREN dml_table_expression_clause RPAREN ) t_alias=ident?
+		update_set_clause ( where_clause | WHERE CURRENT OF ident )? returning_clause? error_logging_clause?
     ;
 update_set_clause:
-	SET ( update_set_element ( COMMA update_set_element )*  | VALUE LPAREN id RPAREN  EQ ( expr | LPAREN subquery RPAREN))
+	SET ( update_set_element ( COMMA update_set_element )*  | VALUE LPAREN ident RPAREN  EQ ( expr | LPAREN subquery RPAREN))
 	;
 	
 
 update_set_element:
 	( 	LPAREN update_column ( COMMA update_column)* RPAREN EQ LPAREN subquery RPAREN 
-	  | update_column EQ ( expr | LPAREN subquery RPAREN  | DEFAULT ) 
+	  | update_column EQ ( expr | LPAREN select_statement RPAREN  | DEFAULT ) 
 	)
 	;
 
 update_column:
-		id ( DOT id )*
+		ident ( DOT ident )*
 	;
 swallow_to_semi :
         ~( SEMI )+
@@ -799,7 +798,7 @@ match_parens
     | RPAREN match_parens LPAREN
     ;
 
-label_name:	id;
+label_name:	ident;
 expression:
     atom
     | expression OR expression
@@ -829,7 +828,7 @@ expression:
 */
 atom
     : variable_or_function_call ( PERCENT attribute )?
-	| CAST LPAREN  expression  AS id ( DOT id )* ( LPAREN INTEGER ( COMMA INTEGER)? ( BYTE | CHAR)? RPAREN )?  RPAREN
+	| CAST LPAREN  expression  AS ident ( DOT ident )* ( LPAREN INTEGER ( COMMA INTEGER)? ( BYTE | CHAR)? RPAREN )?  RPAREN
 
     | SQL PERCENT attribute
     | string_literal
@@ -906,7 +905,7 @@ interval_day_to_second:
 	;
 	
 collection_exists
-    : id DOT EXISTS LPAREN expression RPAREN
+    : ident DOT EXISTS LPAREN expression RPAREN
     ;
 
 conditional_predicate
@@ -916,7 +915,7 @@ conditional_predicate
     ;
 
 parameter
-    : ( id ARROW )? expression
+    : ( ident ARROW )? expression
     ;
 
 index
@@ -924,20 +923,20 @@ index
     ;
 
 create_package :
-        CREATE ( OR REPLACE )? PACKAGE ( schema_name=id DOT )? package_name=id
+        CREATE ( OR REPLACE )? PACKAGE ( schema_name=ident DOT )? package_name=ident
         ( invoker_rights_clause )?
-        ( IS | AS ) ( declare_section )? END ( id )? SEMI
+        ( IS | AS ) ( declare_section )? END ( ident )? SEMI
     ;
 
 create_package_body :
-        CREATE ( OR REPLACE )? PACKAGE BODY  (schema_name=id DOT)?  package_name=id
+        CREATE ( OR REPLACE )? PACKAGE BODY  (schema_name=ident DOT)?  package_name=ident
         ( IS | AS ) ( declare_section )?
-        ( initialize_section=body | END ( package_name2=id )? )
+        ( initialize_section=body | END ( package_name2=ident )? )
         SEMI
     ;
 
 create_procedure :
-        CREATE ( OR REPLACE )? PROCEDURE ( schema_name=id DOT )? procedure_name=id
+        CREATE ( OR REPLACE )? PROCEDURE ( schema_name=ident DOT )? procedure_name=ident
         ( LPAREN parameter_declaration ( COMMA parameter_declaration )* RPAREN )?
         invoker_rights_clause?
         ( IS | AS )
@@ -948,7 +947,7 @@ create_procedure :
     ;
 
 create_function :
-        CREATE ( OR REPLACE )? FUNCTION ( schema_name=id DOT )? function_name=id
+        CREATE ( OR REPLACE )? FUNCTION ( schema_name=ident DOT )? function_name=ident
         ( LPAREN parameter_declaration ( COMMA parameter_declaration )* RPAREN )?
         RETURN datatype
         invoker_rights_clause?
@@ -969,37 +968,46 @@ call_spec
 
 create_view:
 	CREATE ( OR REPLACE )? ( ( NO )? FORCE )? VIEW
-	(schema_name=id DOT )? view_name=id ( LPAREN ( alias+=id /*( inline_constraint)*/ /*| out_of_line_constraint*/ ) 
-		( COMMA ( alias+=id /*( inline_constraint)*/ /*| out_of_line_constraint*/ ) ) *  RPAREN )?
+	(schema_name=ident DOT )? view_name=ident ( LPAREN ( alias+=ident /*( inline_constraint)*/ /*| out_of_line_constraint*/ ) 
+		( COMMA ( alias+=ident /*( inline_constraint)*/ /*| out_of_line_constraint*/ ) ) *  RPAREN )?
 	AS subquery_factoring_clause? subquery  ( subquery_restriction_clause )? 
 	;
 	
-id:
+ident:
     ID | ERRORS | EXCEPTIONS | SAVE | SHOW | COUNT | DELETE | TYPE | FIRST | LAST | RIGHT | LEFT | REPLACE | ROW | LANGUAGE 
 	| YEAR| MONTH | DAY | HOUR | MINUTE | SECOND | EXTRACT | AT | DATE | TRIM | WAIT | SKIPl | LOCKED | OF | NOWAIT  | NO
 	| OPEN | AS | TO | INTERVAL | EXECUTE | CHAR | BYTE | LOG | WITH | ESCAPE | ROWS | REVERSE | SQL | ROWID | PACKAGE | FUNCTION
 	| CROSS | RECORD | NAME | PIPE | COMMIT | CURRENT_USER |LIMIT | PRIOR | EXISTS | NOTFOUND | REF |BODY |  TRANSACTION 
-	| SUBTYPE | EXTERNAL | FULL | LAST | IF | DENSE_RANK | RAW | READ | VALUE | BULK
+	| SUBTYPE | EXTERNAL | FULL | LAST | IF | DENSE_RANK | RAW | READ | VALUE | BULK | IGNORE
     ;
 	
 id_func:
-	id 
+	ident 
 	|DISTINCT 
 	;
 
 //kERRORS : {_input.LT(1).getText().length() >= 3 && "errors".startsWith(_input.LT(1).getText().toLowerCase())}? ID;
 //kEXCEPTIONS : {_input.LT(1).getText().equalsIgnoreCase("exceptions")}? ID;
-kFOUND : {_input.LT(1).getText().equalsIgnoreCase("found")}? ID;
-kINDICES : {_input.LT(1).getText().equalsIgnoreCase("indices")}? ID;
-kMOD : {_input.LT(1).getText().equalsIgnoreCase("mod")}? ID;
-kNAME : {_input.LT(1).getText().equalsIgnoreCase("name")}? ID;
+//kFOUND : {_input.LT(1).getText().equalsIgnoreCase("found")}? ID;
+kFOUND : {$text.lower()=="found"}? ID;
+//kINDICES : {_input.LT(1).getText().equalsIgnoreCase("indices")}? ID;
+kINDICES : {$text.lower()=="indices"}? ID;
+//kMOD : {_input.LT(1).getText().equalsIgnoreCase("mod")}? ID;
+kMOD : {$text.lower()=="mod"}? ID;
+//kNAME : {_input.LT(1).getText().equalsIgnoreCase("name")}? ID;
+kNAME : {$text.lower()=="name"}? ID;
 //kOF : {_input.LT(1).getText().equalsIgnoreCase("of")}? ID;
-kREPLACE : {_input.LT(1).getText().equalsIgnoreCase("replace")}? ID;
-kROWCOUNT : {_input.LT(1).getText().equalsIgnoreCase("rowcount")}? ID;
+//kREPLACE : {_input.LT(1).getText().equalsIgnoreCase("replace")}? ID;
+kREPLACE : {$text.lower()=="replace"}? ID;
+//kROWCOUNT : {_input.LT(1).getText().equalsIgnoreCase("rowcount")}? ID;
+kROWCOUNT : {$text.lower()=="rowcount"}? ID;
 //kSAVE : {_input.LT(1).getText().equalsIgnoreCase("save")}? ID;
 //kSHOW : {_input.LT(1).getText().equalsIgnoreCase("show")}? ID;
 //kTYPE : {_input.LT(1).getText().equalsIgnoreCase("type")}? ID;
-kVALUES : {_input.LT(1).getText().equalsIgnoreCase("values")}? ID;
+//kVALUES : {_input.LT(1).getText().equalsIgnoreCase("values")}? ID;
+kVALUES : {$text.lower()=="values"}? ID;
+//VALUES: V A L U E S ;
+
 
 ALL : A L L ;
 AND :    A N D ;
@@ -1063,6 +1071,7 @@ GROUPING	:	G R O U P I N G;
 HAVING	: H A V I N G ;
 HOUR	: H O U R ;
 IF  :   I F ;
+IGNORE  : I G N O R E ;
 IN : I N  ;
 INCLUDE : I N C L U D E ;
 INDEX : I N D E X  ;
@@ -1350,30 +1359,30 @@ ML_COMMENT
  	;
 
 /* case insensitive lexer matching */
-fragment A:('a'|'A');
-fragment B:('b'|'B');
-fragment C:('c'|'C');
-fragment D:('d'|'D');
-fragment E:('e'|'E');
-fragment F:('f'|'F');
-fragment G:('g'|'G');
-fragment H:('h'|'H');
-fragment I:('i'|'I');
-fragment J:('j'|'J');
-fragment K:('k'|'K');
-fragment L:('l'|'L');
-fragment M:('m'|'M');
-fragment N:('n'|'N');
-fragment O:('o'|'O');
-fragment P:('p'|'P');
-fragment Q:('q'|'Q');
-fragment R:('r'|'R');
-fragment S:('s'|'S');
-fragment T:('t'|'T');
-fragment U:('u'|'U');
-fragment V:('v'|'V');
-fragment W:('w'|'W');
-fragment X:('x'|'X');
-fragment Y:('y'|'Y');
-fragment Z:('z'|'Z');
-fragment ICELANDIC_LETTER: ( 'á'|'Á'| 'Ð'|'ð'|'É'|'é'|'Í'|'í'|'Ó'|'ó'|'Ú'|'ú'|'Ý'|'ý'|'Þ'|'þ'|'Æ'|'æ'|'Ö'|'ö');
+fragment A : [aA]; // match either an 'a' or 'A'
+fragment B : [bB];
+fragment C : [cC];
+fragment D : [dD];
+fragment E : [eE];
+fragment F : [fF];
+fragment G : [gG];
+fragment H : [hH];
+fragment I : [iI];
+fragment J : [jJ];
+fragment K : [kK];
+fragment L : [lL];
+fragment M : [mM];
+fragment N : [nN];
+fragment O : [oO];
+fragment P : [pP];
+fragment Q : [qQ];
+fragment R : [rR];
+fragment S : [sS];
+fragment T : [tT];
+fragment U : [uU];
+fragment V : [vV];
+fragment W : [wW];
+fragment X : [xX];
+fragment Y : [yY];
+fragment Z : [zZ];
+fragment ICELANDIC_LETTER: ( 'ï¿½'|'ï¿½'| 'ï¿½'|'ï¿½'|'ï¿½'|'ï¿½'|'ï¿½'|'ï¿½'|'ï¿½'|'ï¿½'|'ï¿½'|'ï¿½'|'ï¿½'|'ï¿½'|'ï¿½'|'ï¿½'|'ï¿½'|'ï¿½'|'ï¿½'|'ï¿½');
